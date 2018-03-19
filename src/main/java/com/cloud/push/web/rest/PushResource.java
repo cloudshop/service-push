@@ -6,7 +6,10 @@ import cn.jiguang.common.resp.APIConnectionException;
 import cn.jiguang.common.resp.APIRequestException;
 import cn.jpush.api.push.PushClient;
 import cn.jpush.api.push.PushResult;
+import cn.jpush.api.push.model.Platform;
 import cn.jpush.api.push.model.PushPayload;
+import cn.jpush.api.push.model.audience.Audience;
+import cn.jpush.api.push.model.notification.Notification;
 
 import com.cloud.push.service.MessageService;
 import com.cloud.push.web.rest.errors.BadRequestAlertException;
@@ -45,14 +48,40 @@ public class PushResource {
 
     @PostMapping("/push")
     @Timed
-    public PushResult sendPush(@RequestBody Push push) throws Exception {
+    /**
+     * @author 逍遥子
+     * @email 756898059@qq.com
+     * @date 2018年3月17日
+     * @version 1.0
+     * @param Push
+     * @return PushResult
+     * @throws Exception
+     */
+    public @ResponseBody PushResult sendPush(@RequestBody Push push) throws Exception {
         log.debug("REST request to send push : {}", push);
         if (push.getId() != null) {
             throw new BadRequestAlertException("A new message cannot already have an ID", ENTITY_NAME, "idexists");
         }
         PushClient pushClient = new PushClient("7b86cdd203328e704718bce9", "bd5ea486e324b235c89b6340");
-		PushResult sendPush = pushClient.sendPush(PushPayload.alertAll(push.getContent()));
-		return sendPush;
+        PushResult pushResult = null;
+        //1发送给所有人（all） 2指定regid推送
+        switch (push.getType()) {
+		case 1:
+			pushResult = pushClient.sendPush(PushPayload.alertAll(push.getContent()));
+			break;
+		case 2:
+			if (push.getRegIds() == null || push.getRegIds().size() < 1) {
+				throw new BadRequestAlertException("推送目标regid不合法", ENTITY_NAME, "regidsError");
+			}
+			pushClient.sendPush(PushPayload.newBuilder()
+					.setPlatform(Platform.android_ios())
+					.setNotification(Notification.alert(push.getContent()))
+					.setAudience(Audience.registrationId(push.getRegIds())).build());
+			break;
+		default:
+			throw new BadRequestAlertException("推送type不合法", ENTITY_NAME, "pushTypeError");
+		}
+		return pushResult;
     }
     
     /**

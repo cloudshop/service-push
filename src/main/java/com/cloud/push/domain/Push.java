@@ -4,6 +4,7 @@ import javax.persistence.*;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -13,7 +14,7 @@ public class Push implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private Long id;
+    private Long id; //暂留
 
     private String cid;
 
@@ -21,9 +22,11 @@ public class Push implements Serializable {
 
     private String title;
 
-    private String content;
+    private String content;//内容
 
     private String target;
+    
+    private List<String> regIds;//推送设备id
 
     private Instant createdTime;
 
@@ -32,6 +35,8 @@ public class Push implements Serializable {
     private Integer retries;
 
     private Integer version;
+    
+    private Integer type; //1发送给所有人（all） 2指定regid推送
 
     public Long getId() {
         return id;
@@ -158,7 +163,23 @@ public class Push implements Serializable {
         this.version = version;
     }
 
-    @Override
+    public Integer getType() {
+		return type;
+	}
+
+	public void setType(Integer type) {
+		this.type = type;
+	}
+
+	public List<String> getRegIds() {
+		return regIds;
+	}
+
+	public void setRegIds(List<String> regIds) {
+		this.regIds = regIds;
+	}
+
+	@Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
